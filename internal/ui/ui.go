@@ -49,11 +49,17 @@ func Table(w io.Writer, header []string, rows [][]string) {
 		}
 	}
 	line := func(cells []string) string {
+		for len(cells) > 0 && lipgloss.Width(cells[len(cells)-1]) == 0 {
+			cells = cells[:len(cells)-1] // no trailing blanks, even styled ones
+		}
 		var b strings.Builder
 		for i, cell := range cells {
-			b.WriteString("  " + cell + strings.Repeat(" ", widths[i]-lipgloss.Width(cell)))
+			b.WriteString("  " + cell)
+			if i < len(cells)-1 {
+				b.WriteString(strings.Repeat(" ", widths[i]-lipgloss.Width(cell)))
+			}
 		}
-		return strings.TrimRight(b.String(), " ")
+		return b.String()
 	}
 	fmt.Fprintln(w, Faint.Render(line(header)))
 	for _, row := range rows {

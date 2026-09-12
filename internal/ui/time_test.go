@@ -26,7 +26,8 @@ func TestUntil(t *testing.T) {
 	now := time.Date(2026, 9, 16, 10, 0, 0, 0, time.UTC)
 	tests := map[time.Duration]string{
 		20 * time.Minute: "in 20m",
-		90 * time.Second: "in 1m 30s",
+		90 * time.Second: "in 2m",
+		45 * time.Second: "in 45s",
 		time.Hour + 5*time.Minute + 20*time.Second:     "in 1h 5m",
 		2*24*time.Hour + 3*time.Hour + 40*time.Minute:  "in 2d 4h",
 		23*time.Hour + 59*time.Minute + 50*time.Second: "in 1d",

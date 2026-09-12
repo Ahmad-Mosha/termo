@@ -39,12 +39,12 @@ func Until(t, now time.Time) string {
 }
 
 // Duration formats d with its two largest units, rounded: "2d 3h", "1h 5m",
-// "45s".
+// "20m". Seconds only show in the last minute.
 func Duration(d time.Duration) string {
 	switch {
 	case d >= 24*time.Hour:
 		d = d.Round(time.Hour)
-	case d >= time.Hour:
+	case d >= time.Minute:
 		d = d.Round(time.Minute)
 	default:
 		d = d.Round(time.Second)

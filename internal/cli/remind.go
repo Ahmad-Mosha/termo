@@ -237,7 +237,10 @@ termo remind edit 5 --once`,
 func remindSnoozeCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "snooze <id> [duration]",
-		Short: "Push a reminder back (10m unless you say)",
+		Short: "Remind me again later (10m unless you say)",
+		Long: `Remind me again later, 10 minutes unless you give a duration.
+A one-time reminder moves back. A repeating reminder keeps its schedule
+and you get one extra reminder.`,
 		Example: `termo remind snooze 4
 termo remind snooze 4 1h`,
 		Args: cobra.RangeArgs(1, 2),
@@ -252,16 +255,26 @@ termo remind snooze 4 1h`,
 					return err
 				}
 			}
-			now := time.Now().Truncate(time.Second)
-			snoozed, err := updateReminder(id, func(r *remind.Reminder) error {
-				r.Snooze(d, now)
-				return nil
-			})
+			store, err := openStore()
 			if err != nil {
 				return err
 			}
-			ui.Success(ui.Writer(cmd.OutOrStdout()), "Snoozed %s until %s %s",
-				idLabel(id), ui.When(snoozed.Due, now), ui.Faint.Render("("+ui.Until(snoozed.Due, now)+")"))
+			now := time.Now().Truncate(time.Second)
+			var snoozed remind.Reminder
+			if err := store.Update(func(l *remind.List) (err error) {
+				snoozed, err = l.Snooze(id, d, now)
+				return err
+			}); err != nil {
+				return err
+			}
+			until := ui.When(snoozed.Due, now) + " " + ui.Faint.Render("("+ui.Until(snoozed.Due, now)+")")
+			w := ui.Writer(cmd.OutOrStdout())
+			if snoozed.ID == id {
+				ui.Success(w, "Snoozed %s until %s", idLabel(id), until)
+			} else {
+				ui.Success(w, "Snoozed %s until %s as %s", idLabel(id), until, idLabel(snoozed.ID))
+				fmt.Fprintln(w, "  "+ui.Faint.Render("Its schedule stays the same."))
+			}
 			return nil
 		},
 	}

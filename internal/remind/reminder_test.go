@@ -58,10 +58,30 @@ func TestFireDue(t *testing.T) {
 	}
 }
 
-func TestSnoozeRevivesDoneReminder(t *testing.T) {
-	r := Reminder{Due: wed(9, 0), Done: true}
-	r.Snooze(10*time.Minute, wed(10, 0))
-	if r.Done || !r.Due.Equal(wed(10, 10)) {
-		t.Errorf("got due %v done %v, want 10:10 and not done", r.Due, r.Done)
+func TestSnooze(t *testing.T) {
+	var l List
+	fired := l.Add(Reminder{Message: "fired", Due: wed(9, 0), Done: true})
+	upcoming := l.Add(Reminder{Message: "upcoming", Due: wed(11, 0)})
+	daily := l.Add(Reminder{Message: "daily", Due: wed(9, 0).AddDate(0, 0, 1), Repeat: &Repeat{Days: allDays, At: 9 * 60}})
+	now := wed(10, 0)
+
+	tests := []struct {
+		name   string
+		id     int
+		wantID int
+		want   time.Time
+	}{
+		{"a fired reminder comes back after the snooze", fired.ID, fired.ID, wed(10, 10)},
+		{"an upcoming reminder is pushed back", upcoming.ID, upcoming.ID, wed(11, 10)},
+		{"a repeating reminder gets a one-time copy", daily.ID, daily.ID + 1, wed(10, 10)},
+	}
+	for _, tt := range tests {
+		got, err := l.Snooze(tt.id, 10*time.Minute, now)
+		if err != nil || got.ID != tt.wantID || !got.Due.Equal(tt.want) || got.Done {
+			t.Errorf("%s: got #%d at %v (done %v), %v; want #%d at %v", tt.name, got.ID, got.Due, got.Done, err, tt.wantID, tt.want)
+		}
+	}
+	if r, _ := l.Get(daily.ID); !r.Due.Equal(wed(9, 0).AddDate(0, 0, 1)) {
+		t.Errorf("the repeating reminder's schedule moved to %v", r.Due)
 	}
 }

@@ -34,12 +34,6 @@ func (s Repeat) First(now time.Time) time.Time {
 	return s.next(now, now)
 }
 
-// Snooze makes r fire again d from now.
-func (r *Reminder) Snooze(d time.Duration, now time.Time) {
-	r.Due = now.Add(d)
-	r.Done = false
-}
-
 // fire records that r went off at now and moves it to its next occurrence.
 func (r *Reminder) fire(now time.Time) {
 	r.FiredAt = now
@@ -124,6 +118,26 @@ func (l *List) Remove(id int) (Reminder, error) {
 	removed := *r
 	l.Reminders = slices.DeleteFunc(l.Reminders, func(r Reminder) bool { return r.ID == id })
 	return removed, nil
+}
+
+// Snooze reminds you about reminder id again later and returns the reminder
+// that will fire. A one-time reminder moves back by d, counted from when it
+// was due, or from now if it already fired. A repeating reminder keeps its
+// schedule and gets a one-time copy d from now.
+func (l *List) Snooze(id int, d time.Duration, now time.Time) (Reminder, error) {
+	r, err := l.Get(id)
+	if err != nil {
+		return Reminder{}, err
+	}
+	if r.Repeat != nil {
+		return l.Add(Reminder{Message: r.Message, Due: now.Add(d), Created: now}), nil
+	}
+	from := now
+	if !r.Done && r.Due.After(now) {
+		from = r.Due
+	}
+	r.Due, r.Done = from.Add(d), false
+	return *r, nil
 }
 
 // ClearDone deletes the one-time reminders that already fired and reports

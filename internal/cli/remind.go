@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Ahmad-Mosha/termo/internal/notify"
 	"github.com/Ahmad-Mosha/termo/internal/remind"
 	"github.com/Ahmad-Mosha/termo/internal/storage"
 	"github.com/Ahmad-Mosha/termo/internal/ui"
@@ -32,8 +33,26 @@ Run it with no subcommand to list your reminders.
 	cmd.AddCommand(
 		remindInCmd(), remindAtCmd(), remindEveryCmd(),
 		remindListCmd(), remindEditCmd(), remindSnoozeCmd(), remindRmCmd(), remindClearCmd(),
+		remindTestCmd(),
 	)
 	return cmd
+}
+
+func remindTestCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "test",
+		Short: "Send a test notification",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := remind.Notify(remind.Fired{Message: "This is how your reminders will look."}); err != nil {
+				return err
+			}
+			w := ui.Writer(cmd.OutOrStdout())
+			ui.Success(w, "Sent a test notification")
+			fmt.Fprintln(w, "  "+ui.Faint.Render(notify.Hint))
+			return nil
+		},
+	}
 }
 
 func remindInCmd() *cobra.Command {

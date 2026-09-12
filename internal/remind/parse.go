@@ -54,7 +54,7 @@ func ParseDuration(s string) (time.Duration, error) {
 	s = strings.ToLower(strings.TrimSpace(s))
 	parts := durationPart.FindAllStringSubmatch(s, -1)
 	if len(parts) == 0 || strings.TrimSpace(durationPart.ReplaceAllString(s, "")) != "" {
-		return 0, fmt.Errorf("%q isn't a duration (try 20m, 1h30m or 2d)", s)
+		return 0, fmt.Errorf("can't read %q as a duration (try 20m, 1h30m or 2d)", s)
 	}
 	var d time.Duration
 	for _, p := range parts {
@@ -71,8 +71,13 @@ func ParseDuration(s string) (time.Duration, error) {
 // or "2026-09-20 09:00". A clock time alone means the next time that clock
 // comes around; a day alone means 09:00 that day.
 func ParseTime(s string, now time.Time) (time.Time, error) {
-	bad := fmt.Errorf("%q isn't a time (try 15:30, 9am, tomorrow 9am, fri 18:00 or 2026-09-20 09:00)", s)
+	bad := fmt.Errorf("can't read %q as a time (try 15:30, 9am, tomorrow 9am, fri 18:00 or 2026-09-20 09:00)", s)
 	words := strings.Fields(spacedAmPm.ReplaceAllString(strings.ToLower(s), "$1$2"))
+	if len(words) == 1 {
+		if h, err := strconv.Atoi(words[0]); err == nil && h >= 1 && h <= 12 {
+			return time.Time{}, fmt.Errorf("did you mean %dam or %dpm? A bare %d could be either", h, h, h)
+		}
+	}
 	clock, day := defaultClock, ""
 	switch len(words) {
 	case 1:
@@ -119,7 +124,7 @@ func ParseTime(s string, now time.Time) (time.Time, error) {
 		t = atClock(date, clock)
 	}
 	if !t.After(now) {
-		return time.Time{}, fmt.Errorf("%q is in the past", s)
+		return time.Time{}, fmt.Errorf("the time %q has already passed", s)
 	}
 	return t, nil
 }
@@ -139,10 +144,15 @@ func ParseRepeat(s string) (Repeat, error) {
 		return Repeat{Every: d}, nil
 	}
 
-	bad := fmt.Errorf("%q isn't a schedule (try 2h, day 09:00, weekday 9am or mon,wed,fri 18:00)", s)
+	bad := fmt.Errorf("can't read %q as a schedule (try 2h, day 09:00, weekday 9am or mon,wed,fri 18:00)", s)
 	words := strings.Fields(spacedAmPm.ReplaceAllString(s, "$1$2"))
 	if len(words) == 3 && words[1] == "at" {
 		words = []string{words[0], words[2]}
+	}
+	if len(words) == 1 {
+		if _, ok := parseDays(words[0]); ok {
+			return Repeat{}, fmt.Errorf("add a time, like %q", words[0]+" 09:00")
+		}
 	}
 	if len(words) != 2 {
 		return Repeat{}, bad

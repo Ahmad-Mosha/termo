@@ -29,9 +29,6 @@ func printDetails(w io.Writer, r remind.Reminder, now time.Time) {
 	default:
 		parts = append(parts, ui.When(r.Due, now), ui.Until(r.Due, now))
 	}
-	if r.Popup {
-		parts = append(parts, "popup")
-	}
 	fmt.Fprintln(w, "  "+ui.Bold.Render(r.Message))
 	fmt.Fprintln(w, "  "+ui.Faint.Render(strings.Join(parts, " · ")))
 }
@@ -47,9 +44,6 @@ func printTable(w io.Writer, reminders []remind.Reminder, now time.Time) {
 
 func reminderRow(r remind.Reminder, now time.Time) []string {
 	msg := ansi.Truncate(r.Message, maxMessage, "…")
-	if r.Popup {
-		msg += ui.Faint.Render(" (popup)")
-	}
 	repeats := ""
 	if r.Repeat != nil {
 		repeats = schedule(r.Repeat)

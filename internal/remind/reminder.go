@@ -14,7 +14,6 @@ type Reminder struct {
 	Message string    `json:"message"`
 	Due     time.Time `json:"due"`
 	Repeat  *Repeat   `json:"repeat,omitempty"` // nil for one-time reminders
-	Popup   bool      `json:"popup,omitempty"`  // a dialog you must dismiss, not a banner
 	Done    bool      `json:"done,omitempty"`   // a one-time reminder that already fired
 	FiredAt time.Time `json:"fired_at,omitzero"`
 	Created time.Time `json:"created"`
@@ -96,7 +95,6 @@ type Fired struct {
 	Message string    `json:"message"`
 	Due     time.Time `json:"due"`
 	At      time.Time `json:"at"`
-	Popup   bool      `json:"popup,omitempty"`
 }
 
 // Add stores r under a new ID and returns the stored copy.
@@ -150,7 +148,7 @@ func (l *List) FireDue(now time.Time) []Fired {
 		if r.Done || r.Due.After(now) {
 			continue
 		}
-		fired = append(fired, Fired{ID: r.ID, Message: r.Message, Due: r.Due, At: now, Popup: r.Popup})
+		fired = append(fired, Fired{ID: r.ID, Message: r.Message, Due: r.Due, At: now})
 		r.fire(now)
 	}
 	l.Inbox = append(l.Inbox, fired...)

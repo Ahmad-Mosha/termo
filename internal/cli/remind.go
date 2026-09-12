@@ -37,13 +37,12 @@ Run it with no subcommand to list your reminders.
 }
 
 func remindInCmd() *cobra.Command {
-	var popup bool
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "in <duration> <message>",
 		Short: "Remind me after a while",
 		Example: `termo remind in 20m "Check the oven"
 termo remind in 1h30m Call mom
-termo remind in 2 days "Renew the domain" --popup`,
+termo remind in 2 days "Renew the domain"`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, msg, err := splitArgs(args, remind.ParseDuration)
@@ -51,21 +50,18 @@ termo remind in 2 days "Renew the domain" --popup`,
 				return err
 			}
 			now := time.Now().Truncate(time.Second)
-			return addReminder(cmd, remind.Reminder{Message: msg, Due: now.Add(d), Popup: popup, Created: now})
+			return addReminder(cmd, remind.Reminder{Message: msg, Due: now.Add(d), Created: now})
 		},
 	}
-	addPopupFlag(cmd, &popup)
-	return cmd
 }
 
 func remindAtCmd() *cobra.Command {
-	var popup bool
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "at <time> <message>",
 		Short: "Remind me at a time",
 		Example: `termo remind at 15:30 Standup
 termo remind at "tomorrow 9am" "Call the dentist"
-termo remind at "2026-09-20 09:00" "Renew the domain" --popup`,
+termo remind at "2026-09-20 09:00" "Renew the domain"`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			now := time.Now().Truncate(time.Second)
@@ -73,21 +69,18 @@ termo remind at "2026-09-20 09:00" "Renew the domain" --popup`,
 			if err != nil {
 				return err
 			}
-			return addReminder(cmd, remind.Reminder{Message: msg, Due: due, Popup: popup, Created: now})
+			return addReminder(cmd, remind.Reminder{Message: msg, Due: due, Created: now})
 		},
 	}
-	addPopupFlag(cmd, &popup)
-	return cmd
 }
 
 func remindEveryCmd() *cobra.Command {
-	var popup bool
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "every <schedule> <message>",
 		Short: "Remind me on a schedule",
 		Example: `termo remind every 2h "Drink water"
 termo remind every weekday 09:00 Standup
-termo remind every mon,wed,fri 18:00 Gym --popup`,
+termo remind every mon,wed,fri 18:00 Gym`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			repeat, msg, err := splitArgs(args, remind.ParseRepeat)
@@ -95,11 +88,9 @@ termo remind every mon,wed,fri 18:00 Gym --popup`,
 				return err
 			}
 			now := time.Now().Truncate(time.Second)
-			return addReminder(cmd, remind.Reminder{Message: msg, Due: repeat.First(now), Repeat: &repeat, Popup: popup, Created: now})
+			return addReminder(cmd, remind.Reminder{Message: msg, Due: repeat.First(now), Repeat: &repeat, Created: now})
 		},
 	}
-	addPopupFlag(cmd, &popup)
-	return cmd
 }
 
 func remindListCmd() *cobra.Command {
@@ -118,7 +109,7 @@ func remindListCmd() *cobra.Command {
 
 func remindEditCmd() *cobra.Command {
 	var message, in, at, every string
-	var once, popup bool
+	var once bool
 	cmd := &cobra.Command{
 		Use:   "edit <id>",
 		Short: "Change a reminder's message, time or schedule",
@@ -135,7 +126,7 @@ termo remind edit 5 --once`,
 			flags := cmd.Flags()
 			switch {
 			case flags.NFlag() == 0:
-				return errors.New("say what to change: --message, --in, --at, --every, --once or --popup")
+				return errors.New("say what to change: --message, --in, --at, --every or --once")
 			case flags.Changed("in") && flags.Changed("at"):
 				return errors.New("use --in or --at, not both")
 			case flags.Changed("every") && once:
@@ -172,9 +163,6 @@ termo remind edit 5 --once`,
 					}
 					r.Due, r.Done = t, false
 				}
-				if flags.Changed("popup") {
-					r.Popup = popup
-				}
 				return nil
 			})
 			if err != nil {
@@ -192,7 +180,6 @@ termo remind edit 5 --once`,
 	f.StringVar(&at, "at", "", `fire at this time, like "tomorrow 9am"`)
 	f.StringVar(&every, "every", "", `repeat on this schedule, like "weekday 09:00"`)
 	f.BoolVar(&once, "once", false, "stop repeating")
-	f.BoolVarP(&popup, "popup", "p", false, "use a popup; --popup=false goes back to a notification")
 	return cmd
 }
 
@@ -384,10 +371,6 @@ func addReminder(cmd *cobra.Command, r remind.Reminder) error {
 	ui.Success(w, "Reminder %s set", idLabel(r.ID))
 	printDetails(w, r, time.Now())
 	return nil
-}
-
-func addPopupFlag(cmd *cobra.Command, popup *bool) {
-	cmd.Flags().BoolVarP(popup, "popup", "p", false, "show a popup you have to dismiss instead of a notification")
 }
 
 func openStore() (*remind.Store, error) {

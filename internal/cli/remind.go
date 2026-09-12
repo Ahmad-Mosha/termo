@@ -33,9 +33,41 @@ Run it with no subcommand to list your reminders.
 	cmd.AddCommand(
 		remindInCmd(), remindAtCmd(), remindEveryCmd(),
 		remindListCmd(), remindEditCmd(), remindSnoozeCmd(), remindRmCmd(), remindClearCmd(),
-		remindTestCmd(),
+		remindTestCmd(), remindCheckCmd(),
 	)
 	return cmd
+}
+
+func remindCheckCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "check",
+		Short: "Show reminders that fired since you last looked",
+		Long: `Show reminders that fired since you last looked, then forget them.
+The shell hook from termo init runs this before every prompt.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			// This runs before every prompt: stay quiet on errors, and only
+			// take the write lock when there's something to show.
+			store, err := openStore()
+			if err != nil {
+				return nil
+			}
+			var waiting bool
+			if store.View(func(l *remind.List) error { waiting = len(l.Inbox) > 0; return nil }) != nil || !waiting {
+				return nil
+			}
+			var fired []remind.Fired
+			if store.Update(func(l *remind.List) error { fired = l.TakeInbox(); return nil }) != nil {
+				return nil
+			}
+			w := ui.Writer(cmd.OutOrStdout())
+			now := time.Now()
+			for _, f := range fired {
+				printFired(w, f, now)
+			}
+			return nil
+		},
+	}
 }
 
 func remindTestCmd() *cobra.Command {

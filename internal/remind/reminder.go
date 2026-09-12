@@ -27,6 +27,14 @@ type Repeat struct {
 	At    int            `json:"at,omitempty"` // minutes after midnight
 }
 
+// DefaultSnooze is how long a snooze lasts unless you say otherwise.
+const DefaultSnooze = 10 * time.Minute
+
+// First returns when a new reminder on this schedule should first fire.
+func (s Repeat) First(now time.Time) time.Time {
+	return s.next(now, now)
+}
+
 // Snooze makes r fire again d from now.
 func (r *Reminder) Snooze(d time.Duration, now time.Time) {
 	r.Due = now.Add(d)

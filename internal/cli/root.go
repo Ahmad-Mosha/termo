@@ -12,9 +12,11 @@ import (
 
 // Execute runs the termo command line.
 func Execute(ctx context.Context) error {
+	cobra.EnableCommandSorting = false // list commands in the order they're added
 	root := &cobra.Command{
 		Use:   "termo",
 		Short: "Everyday tools for your terminal",
 	}
+	root.AddCommand(remindCmd())
 	return fang.Execute(ctx, root, fang.WithNotifySignal(os.Interrupt, syscall.SIGTERM))
 }

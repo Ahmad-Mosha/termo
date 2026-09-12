@@ -29,6 +29,14 @@ func Writer(w io.Writer) io.Writer {
 	return colorprofile.NewWriter(w, os.Environ())
 }
 
+// Path shortens a path inside the home directory to start with ~.
+func Path(p string) string {
+	if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(p, home+string(os.PathSeparator)) {
+		return "~" + p[len(home):]
+	}
+	return p
+}
+
 // Success prints a green check and a message.
 func Success(w io.Writer, format string, a ...any) {
 	fmt.Fprintln(w, Green.Render("✓")+" "+fmt.Sprintf(format, a...))

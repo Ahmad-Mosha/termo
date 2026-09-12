@@ -17,6 +17,6 @@ func Execute(ctx context.Context) error {
 		Use:   "termo",
 		Short: "Everyday tools for your terminal",
 	}
-	root.AddCommand(remindCmd())
+	root.AddCommand(remindCmd(), daemonCmd())
 	return fang.Execute(ctx, root, fang.WithNotifySignal(os.Interrupt, syscall.SIGTERM))
 }

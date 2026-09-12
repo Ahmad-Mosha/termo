@@ -353,7 +353,11 @@ func listReminders(cmd *cobra.Command, all, asJSON bool) error {
 	if len(done) > 0 && !all {
 		footer += fmt.Sprintf(" · %d done (--all to show)", len(done))
 	}
-	fmt.Fprintln(w, "\n  "+ui.Faint.Render(footer))
+	status := ui.Green.Render("●") + ui.Faint.Render(" daemon running")
+	if !daemonRunning() {
+		status = ui.Yellow.Render("○") + ui.Faint.Render(" daemon not running (termo daemon install)")
+	}
+	fmt.Fprintln(w, "\n  "+ui.Faint.Render(footer+" · ")+status)
 	return nil
 }
 
@@ -389,6 +393,10 @@ func addReminder(cmd *cobra.Command, r remind.Reminder) error {
 	w := ui.Writer(cmd.OutOrStdout())
 	ui.Success(w, "Reminder %s set", idLabel(r.ID))
 	printDetails(w, r, time.Now())
+	if !daemonRunning() {
+		fmt.Fprintln(w)
+		ui.Warning(w, "The daemon isn't running, so this won't fire. Start it with %s", ui.Accent.Render("termo daemon install"))
+	}
 	return nil
 }
 

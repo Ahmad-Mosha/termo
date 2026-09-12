@@ -8,8 +8,6 @@ import (
 // wed is Wednesday 2026-09-16 at the given clock time.
 func wed(h, m int) time.Time { return time.Date(2026, 9, 16, h, m, 0, 0, time.UTC) }
 
-var weekdays = []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday}
-
 func TestRepeatNext(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -20,9 +18,9 @@ func TestRepeatNext(t *testing.T) {
 		{"interval", Repeat{Every: 2 * time.Hour}, wed(10, 0), wed(10, 0), wed(12, 0)},
 		{"interval skips missed runs", Repeat{Every: 2 * time.Hour}, wed(10, 0), wed(15, 30), wed(16, 0)},
 		{"interval never returns now", Repeat{Every: 2 * time.Hour}, wed(10, 0), wed(16, 0), wed(18, 0)},
-		{"later today", Repeat{Days: weekdays, At: 9 * 60}, wed(8, 0), wed(8, 0), wed(9, 0)},
-		{"tomorrow", Repeat{Days: weekdays, At: 9 * 60}, wed(9, 0), wed(9, 0), wed(9, 0).AddDate(0, 0, 1)},
-		{"skips the weekend", Repeat{Days: weekdays, At: 9 * 60}, wed(9, 0), wed(9, 0).AddDate(0, 0, 2), wed(9, 0).AddDate(0, 0, 5)},
+		{"later today", Repeat{Days: workDays, At: 9 * 60}, wed(8, 0), wed(8, 0), wed(9, 0)},
+		{"tomorrow", Repeat{Days: workDays, At: 9 * 60}, wed(9, 0), wed(9, 0), wed(9, 0).AddDate(0, 0, 1)},
+		{"skips the weekend", Repeat{Days: workDays, At: 9 * 60}, wed(9, 0), wed(9, 0).AddDate(0, 0, 2), wed(9, 0).AddDate(0, 0, 5)},
 	}
 	for _, tt := range tests {
 		if got := tt.repeat.next(tt.due, tt.now); !got.Equal(tt.want) {

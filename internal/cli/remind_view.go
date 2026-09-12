@@ -33,6 +33,13 @@ func printDetails(w io.Writer, r remind.Reminder, now time.Time) {
 	fmt.Fprintln(w, "  "+ui.Faint.Render(strings.Join(parts, " · ")))
 }
 
+// printFired shows a reminder that went off:
+//
+//	⏰ Check the oven · today 14:32 #4
+func printFired(w io.Writer, f remind.Fired, now time.Time) {
+	fmt.Fprintf(w, "⏰ %s %s %s\n", ui.Bold.Render(f.Message), ui.Faint.Render("· "+ui.When(f.At, now)), idLabel(f.ID))
+}
+
 func printTable(w io.Writer, reminders []remind.Reminder, now time.Time) {
 	rows := make([][]string, len(reminders))
 	for i, r := range reminders {

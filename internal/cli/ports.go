@@ -2,7 +2,9 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,7 +25,82 @@ which project or docker container it belongs to, and how long it's been up.`,
 		RunE: func(cmd *cobra.Command, _ []string) error { return listPorts(cmd, asJSON) },
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON for scripts")
+	cmd.AddCommand(portsKillCmd())
 	return cmd
+}
+
+func portsKillCmd() *cobra.Command {
+	var force bool
+	cmd := &cobra.Command{
+		Use:     "kill <port>",
+		Aliases: []string{"stop"},
+		Short:   "Stop whatever is listening on a port",
+		Long: `Stop whatever is listening on a port: the process, or the docker
+container if one owns it.
+
+By default this asks nicely (SIGTERM, or docker stop). --force stops it
+right away (SIGKILL, or docker kill).`,
+		Example: `termo ports kill 3000
+termo ports kill 3000 --force`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			port, err := parsePort(args[0])
+			if err != nil {
+				return err
+			}
+			row, err := findPort(port)
+			if err != nil {
+				return err
+			}
+			if err := ports.Kill(port, force); err != nil {
+				return err
+			}
+			verb := "Stopped"
+			if force {
+				verb = "Killed"
+			}
+			ui.Success(ui.Writer(cmd.OutOrStdout()), "%s port %s %s",
+				verb, ui.Accent.Render(strconv.Itoa(int(port))), ui.Faint.Render("("+describe(row)+")"))
+			return nil
+		},
+	}
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "stop it right away instead of asking nicely")
+	return cmd
+}
+
+func parsePort(s string) (uint32, error) {
+	n, err := strconv.ParseUint(s, 10, 32)
+	if err != nil || n == 0 || n > 65535 {
+		return 0, fmt.Errorf("%q isn't a port number", s)
+	}
+	return uint32(n), nil
+}
+
+// findPort looks up one port among what's currently listening, so a
+// command can report what it's about to act on.
+func findPort(port uint32) (portInfo, error) {
+	rows, err := gatherPorts()
+	if err != nil {
+		return portInfo{}, err
+	}
+	for _, r := range rows {
+		if r.Port == port {
+			return r, nil
+		}
+	}
+	return portInfo{}, errors.New("nothing is listening on port " + strconv.Itoa(int(port)))
+}
+
+// describe names what's behind a port, for a confirmation message.
+func describe(r portInfo) string {
+	switch {
+	case r.Container != "":
+		return "docker: " + r.Container
+	case r.Process != "":
+		return r.Process
+	default:
+		return fmt.Sprintf("pid %d", r.PID)
+	}
 }
 
 // portInfo is one listening port, and whatever termo could learn about

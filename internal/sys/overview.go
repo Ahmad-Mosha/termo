@@ -8,10 +8,10 @@ import (
 
 // Overview is a one-screen snapshot of the machine's health.
 type Overview struct {
-	CPU    CPU
-	Memory Memory
-	Disks  []Disk
-	Uptime time.Duration
+	CPU    CPU           `json:"cpu"`
+	Memory Memory        `json:"memory"`
+	Disks  []Disk        `json:"disks"`
+	Uptime time.Duration `json:"uptime"` // nanoseconds, like every other duration in termo's JSON
 }
 
 // GetOverview gathers a snapshot of CPU, memory, disk and uptime.

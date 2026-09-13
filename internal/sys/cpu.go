@@ -15,11 +15,11 @@ const sampleWindow = 300 * time.Millisecond
 
 // CPU is how busy the processor is right now.
 type CPU struct {
-	Percent float64   // 0-100, averaged across every core
-	PerCore []float64 // one entry per logical core
-	Load1   float64   // load average over the last minute
-	Load5   float64
-	Load15  float64
+	Percent float64   `json:"percent"`  // 0-100, averaged across every core
+	PerCore []float64 `json:"per_core"` // one entry per logical core
+	Load1   float64   `json:"load1"`    // load average over the last minute
+	Load5   float64   `json:"load5"`
+	Load15  float64   `json:"load15"`
 }
 
 // CPUUsage samples CPU usage over a short window.

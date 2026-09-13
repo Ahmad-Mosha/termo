@@ -69,6 +69,27 @@ func TestDisks(t *testing.T) {
 	}
 }
 
+func TestNetwork(t *testing.T) {
+	ifaces, err := Network()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, n := range ifaces {
+		if n.Interface == "lo0" || n.Interface == "lo" {
+			t.Errorf("loopback %q should have been filtered out", n.Interface)
+		}
+		if n.TotalSent == 0 && n.TotalRecv == 0 {
+			t.Errorf("%s: an interface with no traffic should have been filtered out", n.Interface)
+		}
+		if i > 0 {
+			prev := ifaces[i-1]
+			if prev.TotalSent+prev.TotalRecv < n.TotalSent+n.TotalRecv {
+				t.Errorf("not sorted busiest-first: %s came before %s", prev.Interface, n.Interface)
+			}
+		}
+	}
+}
+
 func TestGetOverview(t *testing.T) {
 	o, err := GetOverview()
 	if err != nil {

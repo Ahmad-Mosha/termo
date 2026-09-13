@@ -12,7 +12,7 @@ termo gathers the small tools you reach for every day under a single command, an
 |---|---|---|
 | [`termo remind`](docs/remind.md) | Reminders that reach you as a macOS notification and in your terminal | Available |
 | [`termo ports`](docs/ports.md) | See what's listening on each port, which project or container owns it, and kill it | Available |
-| `termo sys` | System health at a glance, with memory grouped by app | Planned |
+| [`termo sys`](docs/sys.md) | System health at a glance, with memory grouped by app | Available |
 | `termo net` | Network checks, such as making sure an API's rate limiting works | Planned |
 
 Every command has built-in help: `termo --help`, `termo remind --help`.
@@ -103,6 +103,16 @@ termo ports kill 3000
 
 Guide: [docs/ports.md](docs/ports.md)
 
+### System
+
+```sh
+termo sys                      # CPU, memory, disk, uptime at a glance
+termo sys mem                  # memory grouped by app, not by helper process
+termo sys ps                   # running processes, busiest first
+```
+
+Guide: [docs/sys.md](docs/sys.md)
+
 ## Conventions
 
 Every termo tool follows the same rules:
@@ -128,6 +138,7 @@ go build -o termo . && ./termo --help
 | `internal/cli` | Every tool's commands and their output |
 | `internal/remind` | The reminders tool: parsing, scheduling, storage |
 | `internal/ports` | The ports tool: listing, matching to projects and docker |
+| `internal/sys` | The system tool: CPU, memory, disk, network, processes |
 | `internal/daemon` | The background daemon and its launchd setup |
 | `internal/notify` | Desktop notifications for each OS |
 | `internal/storage` | Shared data directory, file locks and safe writes |

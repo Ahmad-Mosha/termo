@@ -14,9 +14,11 @@ const netSampleWindow = 500 * time.Millisecond
 // NetIO is one network interface's throughput, sampled just now, plus its
 // lifetime totals since boot.
 type NetIO struct {
-	Interface              string
-	SentPerSec, RecvPerSec uint64 // bytes/sec, just now
-	TotalSent, TotalRecv   uint64 // bytes, since boot
+	Interface  string `json:"interface"`
+	SentPerSec uint64 `json:"sent_per_sec"` // bytes/sec, just now
+	RecvPerSec uint64 `json:"recv_per_sec"`
+	TotalSent  uint64 `json:"total_sent"` // bytes, since boot
+	TotalRecv  uint64 `json:"total_recv"`
 }
 
 // Network samples every active network interface's current throughput,

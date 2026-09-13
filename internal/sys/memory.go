@@ -4,9 +4,12 @@ import "github.com/shirou/gopsutil/v4/mem"
 
 // Memory is overall RAM and swap usage.
 type Memory struct {
-	Total, Used, Available uint64
-	UsedPercent            float64
-	SwapTotal, SwapUsed    uint64
+	Total       uint64  `json:"total"`
+	Used        uint64  `json:"used"`
+	Available   uint64  `json:"available"`
+	UsedPercent float64 `json:"used_percent"`
+	SwapTotal   uint64  `json:"swap_total"`
+	SwapUsed    uint64  `json:"swap_used"`
 }
 
 // MemoryUsage reads current memory and swap usage.

@@ -12,12 +12,12 @@ import (
 // window so CPU reflects what it's doing right now, not its average
 // since it started.
 type Proc struct {
-	PID    int32
-	Name   string
-	User   string
-	CPU    float64 // percent of one core, 0-100*cores
-	RSS    uint64  // bytes
-	MemPct float32
+	PID    int32   `json:"pid"`
+	Name   string  `json:"name"`
+	User   string  `json:"user,omitempty"`
+	CPU    float64 `json:"cpu"`           // percent of one core, 0-100*cores
+	RSS    uint64  `json:"rss,omitempty"` // bytes; 0 means unreadable, not "uses no memory"
+	MemPct float32 `json:"mem_percent"`
 }
 
 // Processes samples every running process's CPU usage over a short window
@@ -68,9 +68,9 @@ func Processes() ([]Proc, error) {
 
 // AppMemory is the memory used by every process belonging to one app.
 type AppMemory struct {
-	Name  string
-	RSS   uint64 // bytes, summed across every process grouped under Name
-	Procs int
+	Name  string `json:"name"`
+	RSS   uint64 `json:"rss"` // bytes, summed across every process grouped under Name
+	Procs int    `json:"procs"`
 }
 
 // MemoryByApp groups every running process's memory by app, busiest

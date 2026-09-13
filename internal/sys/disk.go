@@ -9,9 +9,10 @@ import (
 
 // Disk is how full one mounted filesystem is.
 type Disk struct {
-	Mountpoint  string
-	Total, Used uint64
-	UsedPercent float64
+	Mountpoint  string  `json:"mountpoint"`
+	Total       uint64  `json:"total"`
+	Used        uint64  `json:"used"`
+	UsedPercent float64 `json:"used_percent"`
 }
 
 // Disks reports usage for the real filesystems on this machine, busiest

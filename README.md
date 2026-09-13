@@ -11,7 +11,7 @@ termo gathers the small tools you reach for every day under a single command, an
 | Tool | What it does | Status |
 |---|---|---|
 | [`termo remind`](docs/remind.md) | Reminders that reach you as a macOS notification and in your terminal | Available |
-| `termo ports` | See what's listening on each port, which project or container owns it, and kill it | Planned |
+| [`termo ports`](docs/ports.md) | See what's listening on each port, which project or container owns it, and kill it | Available |
 | `termo sys` | System health at a glance, with memory grouped by app | Planned |
 | `termo net` | Network checks, such as making sure an API's rate limiting works | Planned |
 
@@ -94,6 +94,15 @@ termo remind snooze 1 10m
 
 Guide: [docs/remind.md](docs/remind.md)
 
+### Ports
+
+```sh
+termo ports                    # what's listening, and where it's from
+termo ports kill 3000
+```
+
+Guide: [docs/ports.md](docs/ports.md)
+
 ## Conventions
 
 Every termo tool follows the same rules:
@@ -118,6 +127,7 @@ go build -o termo . && ./termo --help
 | `main.go` | Entry point |
 | `internal/cli` | Every tool's commands and their output |
 | `internal/remind` | The reminders tool: parsing, scheduling, storage |
+| `internal/ports` | The ports tool: listing, matching to projects and docker |
 | `internal/daemon` | The background daemon and its launchd setup |
 | `internal/notify` | Desktop notifications for each OS |
 | `internal/storage` | Shared data directory, file locks and safe writes |

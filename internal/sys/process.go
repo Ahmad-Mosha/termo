@@ -5,8 +5,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/process"
 )
+
+// cpuSeconds is how much CPU time a process has actually used: time spent
+// running, not time spent blocked waiting on I/O (which Linux, unlike
+// macOS, also reports in the same struct).
+func cpuSeconds(t *cpu.TimesStat) float64 {
+	return t.User + t.System
+}
 
 // Proc is one running process's resource usage, sampled over a short
 // window so CPU reflects what it's doing right now, not its average
@@ -32,7 +40,7 @@ func Processes() ([]Proc, error) {
 	sampled := make([]bool, len(procs))
 	for i, p := range procs {
 		if t, err := p.Times(); err == nil {
-			before[i], sampled[i] = t.Total(), true
+			before[i], sampled[i] = cpuSeconds(t), true
 		}
 	}
 	time.Sleep(sampleWindow)
@@ -56,7 +64,7 @@ func Processes() ([]Proc, error) {
 		if mi, err := p.MemoryInfo(); err == nil && mi != nil {
 			rss = mi.RSS
 		}
-		cpu := 100 * (t.Total() - before[i]) / sampleWindow.Seconds()
+		cpu := 100 * (cpuSeconds(t) - before[i]) / sampleWindow.Seconds()
 		if cpu < 0 {
 			cpu = 0 // the PID was reused between samples
 		}
